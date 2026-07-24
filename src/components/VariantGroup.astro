@@ -1,0 +1,47 @@
+---
+import { formatRupiah } from "../lib/api.js";
+
+const { idProduk, grupNama, opsiList } = Astro.props;
+const wajib = opsiList[0]?.wajib === true;
+const inputName = `varian__${idProduk}__${grupNama}`;
+---
+
+<div class="variant-group" data-produk={idProduk} data-grup={grupNama}>
+  <p class="variant-label">
+    {grupNama}
+    {wajib && <span class="required" title="Wajib dipilih">*</span>}
+  </p>
+
+  <div class="variant-options">
+    {
+      opsiList.map((opsi, i) => (
+        <label class="variant-option">
+          <input
+            type="radio"
+            name={inputName}
+            value={opsi.id_varian}
+            data-tambah-harga={opsi.tambah_harga}
+            required={wajib}
+            checked={wajib && i === 0}
+          />
+          <span>
+            {opsi.nama_varian}
+            {opsi.tambah_harga > 0 && ` (+${formatRupiah(opsi.tambah_harga)})`}
+          </span>
+        </label>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .variant-group { margin-top: 0.75rem; }
+  .variant-label { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; }
+  .required { color: #d33; }
+  .variant-options { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .variant-option {
+    display: flex; align-items: center; gap: 0.3rem;
+    font-size: 0.85rem; border: 1px solid #ddd; border-radius: 6px;
+    padding: 0.3rem 0.6rem; cursor: pointer;
+  }
+</style>

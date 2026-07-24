@@ -1,0 +1,48 @@
+---
+import VariantGroup from "./VariantGroup.astro";
+import { formatRupiah } from "../lib/api.js";
+
+const { produk, grupVarian } = Astro.props;
+const grupList = grupVarian[produk.id] || {};
+const grupEntries = Object.entries(grupList);
+---
+
+<article class="product-card" data-id={produk.id} data-harga={produk.harga}>
+  {
+    produk.foto ? (
+      <img src={produk.foto} alt={produk.nama} loading="lazy" />
+    ) : (
+      <div class="no-photo">Foto belum ada</div>
+    )
+  }
+
+  <h3>{produk.nama}</h3>
+  {produk.deskripsi && <p class="deskripsi">{produk.deskripsi}</p>}
+  <p class="harga">{formatRupiah(produk.harga)}</p>
+
+  {
+    grupEntries.map(([grupNama, opsiList]) => (
+      <VariantGroup idProduk={produk.id} grupNama={grupNama} opsiList={opsiList} />
+    ))
+  }
+
+  <button class="btn-order" data-id={produk.id} data-nama={produk.nama}>
+    Pesan
+  </button>
+</article>
+
+<style>
+  .product-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+  .product-card img, .no-photo {
+    width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #f2f2f2;
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    color: #999; font-size: 0.8rem;
+  }
+  .product-card h3 { margin: 0.5rem 0 0.2rem; }
+  .deskripsi { font-size: 0.85rem; color: #666; margin: 0; }
+  .harga { font-weight: 700; margin: 0.3rem 0; }
+  .btn-order {
+    width: 100%; margin-top: 0.75rem; padding: 0.6rem; border: none;
+    border-radius: 6px; background: #2e7d32; color: white; font-weight: 600;
+  }
+</style>

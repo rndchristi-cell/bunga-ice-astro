@@ -1,17 +1,41 @@
 ---
+import ProductCard from "../components/ProductCard.astro";
+import { getStoreData, groupVarianByProduk } from "../lib/api.js";
 
+const data = await getStoreData();
+const produkAktif = data.produk.filter((p) => p.aktif);
+const grupVarian = groupVarianByProduk(data.varian);
+const namaToko = data.config?.toko || "Toko";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{namaToko}</title>
+  </head>
+  <body>
+    <header>
+      <h1>{namaToko}</h1>
+    </header>
+
+    <main class="product-list">
+      {produkAktif.map((produk) => <ProductCard produk={produk} grupVarian={grupVarian} />)}
+    </main>
+
+    <script>
+      document.querySelectorAll(".btn-order").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest(".product-card");
+          const id = card.dataset.id;
+          console.log("Pesan produk:", id);
+        });
+      });
+    </script>
+  </body>
 </html>
+
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
+  header h1 { font-size: 1.3rem; text-align: center; }
+</style>
