@@ -67,83 +67,68 @@
     <script>
       import { getCart, getCartTotal, clearCart } from "../lib/cart.js";
 
-      function formatRupiah(n) {
-        return `Rp${Number(n).toLocaleString("id-ID")}`;
-      }
+function formatRupiah(n) {
+  return `Rp${Number(n).toLocaleString("id-ID")}`;
+}
 
-      function generateOrderCode() {
-        const now = new Date();
-        const tgl = now.toISOString().slice(2, 10).replace(/-/g, "");
-        const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-        return `BIS-${tgl}-${rand}`;
-      }
+function generateOrderCode() {
+  const now = new Date();
+  const tgl = now.toISOString().slice(2, 10).replace(/-/g, "");
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `BIS-${tgl}-${rand}`;
+}
 
-      function generateJamSlots() {
-        const select = document.getElementById("jam-ambil");
-        const jamMulai = 8, jamSelesai = 20, interval = 30;
-        for (let menit = jamMulai * 60; menit <= jamSelesai * 60; menit += interval) {
-          const h = String(Math.floor(menit / 60)).padStart(2, "0");
-          const m = String(menit % 60).padStart(2, "0");
-          const opt = document.createElement("option");
-          opt.value = `${h}:${m}`;
-          opt.textContent = `${h}:${m}`;
-          select.appendChild(opt);
-        }
-      }
+function generateJamSlots() {
+  const select = document.getElementById("jam-ambil");
+  const jamMulai = 8, jamSelesai = 20, interval = 30;
+  for (let menit = jamMulai * 60; menit <= jamSelesai * 60; menit += interval) {
+    const h = String(Math.floor(menit / 60)).padStart(2, "0");
+    const m = String(menit % 60).padStart(2, "0");
+    const opt = document.createElement("option");
+    opt.value = `${h}:${m}`;
+    opt.textContent = `${h}:${m}`;
+    select.appendChild(opt);
+  }
+}
 
-      function render() {
-        const cart = getCart();
-        const empty = document.getElementById("empty-state");
-        const content = document.getElementById("checkout-content");
+function render() {
+  const cart = getCart();
+  const empty = document.getElementById("empty-state");
+  const content = document.getElementById("checkout-content");
 
-        if (cart.length === 0) {
-          empty.style.display = "block";
-          content.style.display = "none";
-          return;
-        }
+  if (cart.length === 0) {
+    empty.style.display = "block";
+    content.style.display = "none";
+    return;
+  }
 
-        empty.style.display = "none";
-        content.style.display = "block";
+  empty.style.display = "none";
+  content.style.display = "block";
 
-        document.getElementById("ringkasan-list").innerHTML = cart
-          .map((item) => {
-            const varianText = item.varianTerpilih.map((v) => v.nama_varian).join(", ");
-            const subtotal = item.hargaSatuan * item.qty;
-            return `
-              <div class="ringkasan-item">
-                <span>${item.qty}x ${item.namaProduk} (${varianText})</span>
-                <span>${formatRupiah(subtotal)}</span>
-              </div>
-            `;
-          })
-          .join("");
+  document.getElementById("ringkasan-list").innerHTML = cart
+    .map((item) => {
+      const varianText = item.varianTerpilih.map((v) => v.nama_varian).join(", ");
+      const subtotal = item.hargaSatuan * item.qty;
+      return `
+        <div class="ringkasan-item">
+          <span>${item.qty}x ${item.namaProduk} (${varianText})</span>
+          <span>${formatRupiah(subtotal)}</span>
+        </div>
+      `;
+    })
+    .join("");
 
-        document.getElementById("checkout-total").textContent = formatRupiah(getCartTotal(cart));
-      }
+  document.getElementById("checkout-total").textContent = formatRupiah(getCartTotal(cart));
+}
 
-      document.getElementById("btn-batal").addEventListener("click", () => {
-        if (confirm("Yakin mau batalin pesanan ini?")) {
-          clearCart();
-          window.location.href = "/";
-        }
-      });
+document.getElementById("btn-batal").addEventListener("click", () => {
+  if (confirm("Yakin mau batalin pesanan ini?")) {
+    clearCart();
+    window.location.href = "/";
+  }
+});
 
-      document.getElementById("btn-konfirmasi").addEventListener("click", () => {
-        const cart = getCart();
-        const ambil = document.querySelector('input[name="ambil"]:checked').value;
-        const jamAmbil = document.getElementById("jam-ambil").value;
-        const orderCode = generateOrderCode();
-
-        const order = {
-          orderCode,
-          ambil,
-          jamAmbil,
-          items: cart,
-          total: getCartTotal(cart),
-          createdAt: new Date().toISOString(),
-        };
-
-        document.getElementById("btn-konfirmasi").addEventListener("click", async () => {
+document.getElementById("btn-konfirmasi").addEventListener("click", async () => {
   const cart = getCart();
   const ambil = document.querySelector('input[name="ambil"]:checked').value;
   const jamAmbil = document.getElementById("jam-ambil").value;
@@ -182,16 +167,9 @@
   }
 });
 
-        document.getElementById("order-code-display").textContent = orderCode;
-        document.getElementById("checkout-content").style.display = "none";
-        document.getElementById("order-done").style.display = "block";
-
-        clearCart();
-      });
-
-      window.addEventListener("cart-updated", render);
-      generateJamSlots();
-      render();
+window.addEventListener("cart-updated", render);
+generateJamSlots();
+render();
     </script>
   </body>
 </html>
