@@ -1,0 +1,24 @@
+---
+---
+<div id="cart-bar" class="cart-bar" style="display:none;">
+  <span>🛒 <span id="cart-count">0</span> item</span>
+  <span id="cart-total-bar">Rp0</span>
+  <a href="/keranjang" class="btn-lihat-keranjang">Lihat Keranjang</a>
+</div>
+
+<style>
+  .cart-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #2e7d32; color: white;
+    padding: 0.75rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.5rem; max-width: 480px; margin: 0 auto; z-index: 50;
+    font-size: 0.9rem;
+  }
+  .btn-lihat-keranjang {
+    background: white; color: #2e7d32;
+    padding: 0.4rem 0.8rem; border-radius: 6px;
+    font-weight: 600; text-decoration: none; font-size: 0.85rem;
+  }
+</style>

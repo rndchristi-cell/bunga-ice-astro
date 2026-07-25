@@ -1,0 +1,147 @@
+---
+---
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keranjang - Bunga Ice and Snack</title>
+  </head>
+  <body>
+    <header>
+      <a href="/" class="back-link">← Kembali belanja</a>
+      <h1>Keranjang Saya</h1>
+    </header>
+
+    <div id="empty-state" style="display:none;">
+      <p class="empty-msg">Keranjang masih kosong nih 🛒</p>
+      <a href="/" class="btn-primary">Mulai Belanja</a>
+    </div>
+
+    <main id="cart-list"></main>
+
+    <div id="cart-footer" style="display:none;">
+      <div class="total-row">
+        <span>Total</span>
+        <strong id="cart-total">Rp0</strong>
+      </div>
+      <a href="/checkout" class="btn-primary">Lanjut Checkout</a>
+    </div>
+
+    <script>
+      import { getCart, updateQty, removeFromCart, getCartTotal } from "../lib/cart.js";
+
+      function formatRupiah(n) {
+        return `Rp${Number(n).toLocaleString("id-ID")}`;
+      }
+
+      function render() {
+        const cart = getCart();
+        const list = document.getElementById("cart-list");
+        const empty = document.getElementById("empty-state");
+        const footer = document.getElementById("cart-footer");
+
+        if (cart.length === 0) {
+          list.innerHTML = "";
+          empty.style.display = "block";
+          footer.style.display = "none";
+          return;
+        }
+
+        empty.style.display = "none";
+        footer.style.display = "block";
+
+        list.innerHTML = cart
+          .map((item) => {
+            const varianText = item.varianTerpilih.map((v) => v.nama_varian).join(", ");
+            return `
+              <div class="cart-item" data-cart-id="${item.cartId}">
+                <div class="cart-item-info">
+                  <p class="cart-item-name">${item.namaProduk}</p>
+                  <p class="cart-item-varian">${varianText}</p>
+                  <p class="cart-item-harga">${formatRupiah(item.hargaSatuan)}</p>
+                </div>
+                <div class="cart-item-qty">
+                  <button class="qty-btn" data-action="dec">−</button>
+                  <span>${item.qty}</span>
+                  <button class="qty-btn" data-action="inc">+</button>
+                </div>
+                <button class="remove-btn" data-action="remove">🗑</button>
+              </div>
+            `;
+          })
+          .join("");
+
+        document.getElementById("cart-total").textContent = formatRupiah(getCartTotal(cart));
+
+        list.querySelectorAll(".cart-item").forEach((el) => {
+          const cartId = el.dataset.cartId;
+          const item = cart.find((c) => c.cartId === cartId);
+
+          el.querySelector('[data-action="inc"]').addEventListener("click", () => {
+            updateQty(cartId, item.qty + 1);
+          });
+          el.querySelector('[data-action="dec"]').addEventListener("click", () => {
+            updateQty(cartId, item.qty - 1);
+          });
+          el.querySelector('[data-action="remove"]').addEventListener("click", () => {
+            removeFromCart(cartId);
+          });
+        });
+      }
+
+      window.addEventListener("cart-updated", render);
+      render();
+    </script>
+  </body>
+</html>
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    max-width: 480px; margin: 0 auto; padding: 1rem;
+    padding-bottom: 6rem;
+  }
+  header { margin-bottom: 1rem; }
+  .back-link { color: #2e7d32; text-decoration: none; font-size: 0.85rem; }
+  header h1 { font-size: 1.2rem; margin: 0.5rem 0 0; }
+
+  .empty-msg { text-align: center; color: #888; margin-top: 3rem; }
+
+  .cart-item {
+    display: flex; align-items: center; gap: 0.5rem;
+    border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 0.75rem; margin-bottom: 0.75rem;
+  }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-weight: 600; margin: 0; }
+  .cart-item-varian { font-size: 0.8rem; color: #666; margin: 0.2rem 0; }
+  .cart-item-harga { font-weight: 600; margin: 0; }
+
+  .cart-item-qty {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .qty-btn {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid #ccc;
+    background: white; font-size: 1rem;
+  }
+  .remove-btn {
+    background: none; border: none; font-size: 1.1rem;
+    padding: 0.3rem;
+  }
+
+  #cart-footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid #e0e0e0;
+    padding: 1rem; max-width: 480px; margin: 0 auto;
+  }
+  .total-row {
+    display: flex; justify-content: space-between;
+    margin-bottom: 0.75rem; font-size: 1.1rem;
+  }
+  .btn-primary {
+    display: block; width: 100%; text-align: center;
+    background: #2e7d32; color: white; padding: 0.75rem;
+    border-radius: 6px; text-decoration: none; font-weight: 600;
+    box-sizing: border-box;
+  }
+</style>

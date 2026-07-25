@@ -1,0 +1,226 @@
+---
+---
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - Bunga Ice and Snack</title>
+  </head>
+  <body>
+    <header>
+      <a href="/keranjang" class="back-link">← Kembali ke Keranjang</a>
+      <h1>Checkout</h1>
+    </header>
+
+    <div id="empty-state" style="display:none;">
+      <p class="empty-msg">Keranjang kosong, ga ada yang di-checkout 🛒</p>
+      <a href="/" class="btn-primary">Mulai Belanja</a>
+    </div>
+
+    <main id="checkout-content" style="display:none;">
+      <section class="ringkasan">
+        <h2>Ringkasan Pesanan</h2>
+        <div id="ringkasan-list"></div>
+        <div class="total-row">
+          <span>Total</span>
+          <strong id="checkout-total">Rp0</strong>
+        </div>
+      </section>
+
+      <section class="ambil-section">
+        <h2>Kapan mau diambil?</h2>
+        <label class="radio-row">
+          <input type="radio" name="ambil" value="hari_ini" checked />
+          <span>Hari ini</span>
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="ambil" value="besok" />
+          <span>Besok</span>
+        </label>
+      </section>
+
+      <section class="jam-section">
+        <h2>Jam pengambilan</h2>
+        <select id="jam-ambil" class="jam-select"></select>
+      </section>
+
+      <section class="bayar-section">
+        <h2>Pembayaran (QRIS)</h2>
+        <img src="/qris.jpg" alt="QRIS Bunga Ice and Snack" class="qris-img" />
+        <p class="bayar-note">Scan QRIS di atas, lalu kirim bukti bayar ke chat Telegram bot dengan menyebut kode pesanan kamu.</p>
+      </section>
+
+      <div class="action-buttons">
+        <button id="btn-batal" class="btn-secondary">Batalkan Pesanan</button>
+        <button id="btn-konfirmasi" class="btn-primary">Konfirmasi Pesanan</button>
+      </div>
+    </main>
+
+    <div id="order-done" style="display:none;">
+      <p class="done-title">✅ Pesanan Dibuat!</p>
+      <p>Kode Pesanan kamu:</p>
+      <p class="order-code" id="order-code-display"></p>
+      <p class="done-note">Kirim bukti bayar ke chat bot Telegram dengan menyebut kode pesanan di atas ya.</p>
+      <a href="/" class="btn-primary">Kembali ke Beranda</a>
+    </div>
+
+    <script>
+      import { getCart, getCartTotal, clearCart } from "../lib/cart.js";
+
+      function formatRupiah(n) {
+        return `Rp${Number(n).toLocaleString("id-ID")}`;
+      }
+
+      function generateOrderCode() {
+        const now = new Date();
+        const tgl = now.toISOString().slice(2, 10).replace(/-/g, "");
+        const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+        return `BIS-${tgl}-${rand}`;
+      }
+
+      function generateJamSlots() {
+        const select = document.getElementById("jam-ambil");
+        const jamMulai = 8, jamSelesai = 20, interval = 30;
+        for (let menit = jamMulai * 60; menit <= jamSelesai * 60; menit += interval) {
+          const h = String(Math.floor(menit / 60)).padStart(2, "0");
+          const m = String(menit % 60).padStart(2, "0");
+          const opt = document.createElement("option");
+          opt.value = `${h}:${m}`;
+          opt.textContent = `${h}:${m}`;
+          select.appendChild(opt);
+        }
+      }
+
+      function render() {
+        const cart = getCart();
+        const empty = document.getElementById("empty-state");
+        const content = document.getElementById("checkout-content");
+
+        if (cart.length === 0) {
+          empty.style.display = "block";
+          content.style.display = "none";
+          return;
+        }
+
+        empty.style.display = "none";
+        content.style.display = "block";
+
+        document.getElementById("ringkasan-list").innerHTML = cart
+          .map((item) => {
+            const varianText = item.varianTerpilih.map((v) => v.nama_varian).join(", ");
+            const subtotal = item.hargaSatuan * item.qty;
+            return `
+              <div class="ringkasan-item">
+                <span>${item.qty}x ${item.namaProduk} (${varianText})</span>
+                <span>${formatRupiah(subtotal)}</span>
+              </div>
+            `;
+          })
+          .join("");
+
+        document.getElementById("checkout-total").textContent = formatRupiah(getCartTotal(cart));
+      }
+
+      document.getElementById("btn-batal").addEventListener("click", () => {
+        if (confirm("Yakin mau batalin pesanan ini?")) {
+          clearCart();
+          window.location.href = "/";
+        }
+      });
+
+      document.getElementById("btn-konfirmasi").addEventListener("click", () => {
+        const cart = getCart();
+        const ambil = document.querySelector('input[name="ambil"]:checked').value;
+        const jamAmbil = document.getElementById("jam-ambil").value;
+        const orderCode = generateOrderCode();
+
+        const order = {
+          orderCode,
+          ambil,
+          jamAmbil,
+          items: cart,
+          total: getCartTotal(cart),
+          createdAt: new Date().toISOString(),
+        };
+
+        // TODO Bagian 4: kirim `order` ke CF Worker di sini (fetch POST)
+        console.log("Order dibuat:", order);
+
+        document.getElementById("order-code-display").textContent = orderCode;
+        document.getElementById("checkout-content").style.display = "none";
+        document.getElementById("order-done").style.display = "block";
+
+        clearCart();
+      });
+
+      window.addEventListener("cart-updated", render);
+      generateJamSlots();
+      render();
+    </script>
+  </body>
+</html>
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    max-width: 480px; margin: 0 auto; padding: 1rem;
+  }
+  header { margin-bottom: 1rem; }
+  .back-link { color: #2e7d32; text-decoration: none; font-size: 0.85rem; }
+  header h1 { font-size: 1.2rem; margin: 0.5rem 0 0; }
+
+  .empty-msg { text-align: center; color: #888; margin-top: 3rem; }
+
+  section { margin-bottom: 1.5rem; }
+  h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+
+  .ringkasan-item {
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem; margin-bottom: 0.4rem;
+  }
+  .total-row {
+    display: flex; justify-content: space-between;
+    font-size: 1.1rem; margin-top: 0.75rem;
+    border-top: 1px solid #e0e0e0; padding-top: 0.5rem;
+  }
+
+  .radio-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    border: 1px solid #ddd; border-radius: 6px;
+    padding: 0.6rem; margin-bottom: 0.5rem;
+  }
+
+  .jam-select {
+    width: 100%; padding: 0.6rem; border-radius: 6px;
+    border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box;
+  }
+
+  .qris-img {
+    width: 100%; max-width: 280px; display: block; margin: 0 auto 0.75rem;
+    border: 1px solid #eee; border-radius: 8px;
+  }
+  .bayar-note { font-size: 0.85rem; color: #666; text-align: center; }
+
+  .action-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
+  .btn-primary {
+    display: block; width: 100%; text-align: center;
+    background: #2e7d32; color: white; padding: 0.75rem;
+    border-radius: 6px; text-decoration: none; font-weight: 600;
+    border: none; font-size: 1rem; box-sizing: border-box;
+  }
+  .btn-secondary {
+    display: block; width: 100%; text-align: center;
+    background: white; color: #c62828; padding: 0.75rem;
+    border-radius: 6px; font-weight: 600; border: 1px solid #c62828;
+    font-size: 1rem; box-sizing: border-box;
+  }
+
+  #order-done { text-align: center; margin-top: 3rem; }
+  .done-title { font-size: 1.3rem; font-weight: 700; color: #2e7d32; }
+  .order-code {
+    font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;
+    background: #f2f2f2; padding: 0.75rem; border-radius: 8px;
+    margin: 0.75rem 0;
+  }
+  .done-note { font-size: 0.85rem; color: #666; margin-bottom: 1.5rem; }
+</style>

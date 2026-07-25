@@ -1,5 +1,6 @@
 ---
 import ProductCard from "../components/ProductCard.astro";
+import CartBar from "../components/CartBar.astro";
 import { getStoreData, groupVarianByProduk } from "../lib/api.js";
 
 const data = await getStoreData();
@@ -15,27 +16,91 @@ const namaToko = data.config?.toko || "Toko";
     <title>{namaToko}</title>
   </head>
   <body>
-    <header>
-      <h1>{namaToko}</h1>
-    </header>
+    <header><h1>{namaToko}</h1></header>
 
     <main class="product-list">
       {produkAktif.map((produk) => <ProductCard produk={produk} grupVarian={grupVarian} />)}
     </main>
 
+    <CartBar />
+
     <script>
+      import { addToCart, getCart, getCartCount, getCartTotal } from "../lib/cart.js";
+
+      function formatRupiah(n) {
+        return `Rp${Number(n).toLocaleString("id-ID")}`;
+      }
+
+      function updateCartBar() {
+        const cart = getCart();
+        const bar = document.getElementById("cart-bar");
+        if (!bar) return;
+        const count = getCartCount(cart);
+        if (count === 0) {
+          bar.style.display = "none";
+        } else {
+          bar.style.display = "flex";
+          document.getElementById("cart-count").textContent = count;
+          document.getElementById("cart-total-bar").textContent = formatRupiah(getCartTotal(cart));
+        }
+      }
+
       document.querySelectorAll(".btn-order").forEach((btn) => {
         btn.addEventListener("click", () => {
           const card = btn.closest(".product-card");
-          const id = card.dataset.id;
-          console.log("Pesan produk:", id);
+          const produkId = card.dataset.id;
+          const namaProduk = btn.dataset.nama;
+          const hargaDasar = Number(card.dataset.harga);
+
+          const groups = card.querySelectorAll(".variant-group");
+          const varianTerpilih = [];
+          let adaBelumLengkap = false;
+
+          groups.forEach((group) => {
+            const checked = group.querySelector("input[type=radio]:checked");
+            const wajib = group.querySelector(".required") !== null;
+            if (wajib && !checked) {
+              adaBelumLengkap = true;
+              return;
+            }
+            if (checked) {
+              varianTerpilih.push({
+                grup: group.dataset.grup,
+                id_varian: checked.value,
+                nama_varian: checked.nextElementSibling.textContent.trim(),
+                tambah_harga: Number(checked.dataset.tambahHarga || 0),
+              });
+            }
+          });
+
+          if (adaBelumLengkap) {
+            alert("Lengkapi dulu semua pilihan yang wajib (*) ya!");
+            return;
+          }
+
+          const tambahHargaTotal = varianTerpilih.reduce((sum, v) => sum + v.tambah_harga, 0);
+          const hargaSatuan = hargaDasar + tambahHargaTotal;
+
+          addToCart({ produkId, namaProduk, hargaSatuan, varianTerpilih, qty: 1 });
+          updateCartBar();
+
+          const label = btn.textContent;
+          btn.textContent = "✓ Ditambahkan";
+          setTimeout(() => (btn.textContent = label), 1000);
         });
       });
+
+      window.addEventListener("cart-updated", updateCartBar);
+      updateCartBar();
     </script>
   </body>
 </html>
 
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
+  body {
+    font-family: system-ui, sans-serif;
+    max-width: 480px; margin: 0 auto; padding: 1rem;
+    padding-bottom: 5rem;
+  }
   header h1 { font-size: 1.3rem; text-align: center; }
 </style>
