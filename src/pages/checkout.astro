@@ -143,8 +143,44 @@
           createdAt: new Date().toISOString(),
         };
 
-        // TODO Bagian 4: kirim `order` ke CF Worker di sini (fetch POST)
-        console.log("Order dibuat:", order);
+        document.getElementById("btn-konfirmasi").addEventListener("click", async () => {
+  const cart = getCart();
+  const ambil = document.querySelector('input[name="ambil"]:checked').value;
+  const jamAmbil = document.getElementById("jam-ambil").value;
+  const orderCode = generateOrderCode();
+
+  const order = {
+    orderCode,
+    ambil,
+    jamAmbil,
+    items: cart,
+    total: getCartTotal(cart),
+    createdAt: new Date().toISOString(),
+  };
+
+  const btnKonfirmasi = document.getElementById("btn-konfirmasi");
+  btnKonfirmasi.disabled = true;
+  btnKonfirmasi.textContent = "Memproses...";
+
+  try {
+    const res = await fetch("https://bunga-ice-worker.rendychristi.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+    });
+
+    if (!res.ok) throw new Error("Gagal kirim order");
+
+    document.getElementById("order-code-display").textContent = orderCode;
+    document.getElementById("checkout-content").style.display = "none";
+    document.getElementById("order-done").style.display = "block";
+    clearCart();
+  } catch (err) {
+    alert("Gagal memproses pesanan. Coba lagi ya, atau hubungi kami langsung.");
+    btnKonfirmasi.disabled = false;
+    btnKonfirmasi.textContent = "Konfirmasi Pesanan";
+  }
+});
 
         document.getElementById("order-code-display").textContent = orderCode;
         document.getElementById("checkout-content").style.display = "none";
