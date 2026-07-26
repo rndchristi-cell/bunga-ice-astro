@@ -18,7 +18,10 @@ const namaToko = data.config?.toko || "Toko";
     <title>{namaToko}</title>
   </head>
   <body>
-    <header><h1>{namaToko}</h1></header>
+    <header class="site-header">
+  <img src="/bunga-ice-logo.png" alt={namaToko} class="site-logo" />
+  <h1>{namaToko}</h1>
+</header>
 
     <main class="product-list">
       {produkAktif.map((produk) => <ProductCard produk={produk} grupVarian={grupVarian} />)}
