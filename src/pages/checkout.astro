@@ -107,17 +107,18 @@ function render() {
   content.style.display = "block";
 
   document.getElementById("ringkasan-list").innerHTML = cart
-    .map((item) => {
-      const varianText = item.varianTerpilih.map((v) => v.nama_varian).join(", ");
-      const subtotal = item.hargaSatuan * item.qty;
-      return `
-        <div class="ringkasan-item">
-          <span>${item.qty}x ${item.namaProduk} (${varianText})</span>
-          <span>${formatRupiah(subtotal)}</span>
-        </div>
-      `;
-    })
-    .join("");
+  .map((item) => {
+    const varianText = item.varianTerpilih.map((v) => v.nama_varian).join(", ");
+    const namaLengkap = varianText ? `${item.namaProduk} (${varianText})` : item.namaProduk;
+    const subtotal = item.hargaSatuan * item.qty;
+    return `
+      <div class="ringkasan-item">
+        <span>${item.qty}x ${namaLengkap}</span>
+        <span>${formatRupiah(subtotal)}</span>
+      </div>
+    `;
+  })
+  .join("");
 
   document.getElementById("checkout-total").textContent = formatRupiah(getCartTotal(cart));
 }
