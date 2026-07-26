@@ -5,12 +5,26 @@ import { formatRupiah } from "../lib/api.js";
 const { produk, grupVarian } = Astro.props;
 const grupList = grupVarian[produk.id] || {};
 const grupEntries = Object.entries(grupList);
+const fotoList = produk.foto
+  ? produk.foto.split(",").map((f) => f.trim()).filter(Boolean)
+  : [];
 ---
 
 <article class="product-card" data-id={produk.id} data-harga={produk.harga}>
   {
-    produk.foto ? (
-      <img src={produk.foto} alt={produk.nama} loading="lazy" />
+    fotoList.length > 0 ? (
+      <div class="photo-carousel" data-fotos={fotoList.join(",")}>
+        <div class="photo-track">
+          {fotoList.map((foto, i) => (
+            <img src={foto} alt={produk.nama} loading="lazy" class="photo-slide" data-index={i} />
+          ))}
+        </div>
+        {fotoList.length > 1 && (
+          <div class="photo-dots">
+            {fotoList.map((_, i) => <span class="dot" />)}
+          </div>
+        )}
+      </div>
     ) : (
       <div class="no-photo">Foto belum ada</div>
     )
@@ -37,7 +51,44 @@ const grupEntries = Object.entries(grupList);
     display: flex; flex-direction: column;
     background: var(--card-bg);
   }
-  .product-card img, .no-photo {
+
+  .photo-carousel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--photo-placeholder-bg);
+  }
+  .photo-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: none;
+  }
+  .photo-track::-webkit-scrollbar { display: none; }
+  .photo-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scroll-snap-align: start;
+    cursor: pointer;
+  }
+  .photo-dots {
+    position: absolute;
+    bottom: 6px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 4px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+  .dot.active { background: #fff; }
+
+  .no-photo {
     width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--photo-placeholder-bg);
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
     color: var(--text-muted); font-size: 0.75rem;
