@@ -32,17 +32,21 @@ const grupEntries = Object.entries(grupList);
 </article>
 
 <style>
-  .product-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+  .product-card {
+    border: 1px solid #e0e0e0; border-radius: 10px; padding: 0.75rem;
+    display: flex; flex-direction: column;
+  }
   .product-card img, .no-photo {
     width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #f2f2f2;
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    color: #999; font-size: 0.8rem;
+    color: #999; font-size: 0.75rem;
   }
-  .product-card h3 { margin: 0.5rem 0 0.2rem; }
-  .deskripsi { font-size: 0.85rem; color: #666; margin: 0; }
-  .harga { font-weight: 700; margin: 0.3rem 0; }
+  .product-card h3 { margin: 0.5rem 0 0.2rem; font-size: 0.95rem; line-height: 1.2; }
+  .deskripsi { font-size: 0.78rem; color: #666; margin: 0; }
+  .harga { font-weight: 700; margin: 0.3rem 0; font-size: 0.95rem; }
   .btn-order {
-    width: 100%; margin-top: 0.75rem; padding: 0.6rem; border: none;
+    width: 100%; margin-top: auto; padding: 0.55rem; border: none;
     border-radius: 6px; background: #2e7d32; color: white; font-weight: 600;
+    font-size: 0.85rem;
   }
 </style>
