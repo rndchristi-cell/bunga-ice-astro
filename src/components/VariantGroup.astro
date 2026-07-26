@@ -33,11 +33,13 @@ const inputName = `varian__${idProduk}__${grupNama}`;
   .variant-group { margin-top: 0.75rem; }
   .variant-label {
     display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem;
+    color: var(--text-color);
   }
-  .required { color: #d33; }
+  .required { color: #e57373; }
   .variant-select {
     width: 100%; padding: 0.5rem; border-radius: 6px;
-    border: 1px solid #ccc; font-size: 0.9rem; background: white;
+    border: 1px solid var(--border-color); font-size: 0.9rem;
+    background: var(--input-bg); color: var(--text-color);
     box-sizing: border-box;
   }
 </style>
