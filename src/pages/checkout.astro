@@ -1,4 +1,5 @@
 ---
+import "../styles/theme.css";
 ---
 <html lang="id">
   <head>
@@ -180,61 +181,65 @@ render();
     max-width: 480px; margin: 0 auto; padding: 1rem;
   }
   header { margin-bottom: 1rem; }
-  .back-link { color: #2e7d32; text-decoration: none; font-size: 0.85rem; }
-  header h1 { font-size: 1.2rem; margin: 0.5rem 0 0; }
+  .back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+  header h1 { font-size: 1.2rem; margin: 0.5rem 0 0; color: var(--text-color); }
 
-  .empty-msg { text-align: center; color: #888; margin-top: 3rem; }
+  .empty-msg { text-align: center; color: var(--text-muted); margin-top: 3rem; }
 
   section { margin-bottom: 1.5rem; }
-  h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-color); }
 
   .ringkasan-item {
     display: flex; justify-content: space-between;
-    font-size: 0.85rem; margin-bottom: 0.4rem;
+    font-size: 0.85rem; margin-bottom: 0.4rem; color: var(--text-color);
   }
   .total-row {
     display: flex; justify-content: space-between;
     font-size: 1.1rem; margin-top: 0.75rem;
-    border-top: 1px solid #e0e0e0; padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color); padding-top: 0.5rem;
+    color: var(--text-color);
   }
 
   .radio-row {
     display: flex; align-items: center; gap: 0.5rem;
-    border: 1px solid #ddd; border-radius: 6px;
+    border: 1px solid var(--border-color); border-radius: 6px;
     padding: 0.6rem; margin-bottom: 0.5rem;
+    color: var(--text-color); background: var(--card-bg);
   }
 
   .jam-select {
     width: 100%; padding: 0.6rem; border-radius: 6px;
-    border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box;
+    border: 1px solid var(--border-color); font-size: 1rem; box-sizing: border-box;
+    background: var(--input-bg); color: var(--text-color);
   }
 
   .qris-img {
     width: 100%; max-width: 280px; display: block; margin: 0 auto 0.75rem;
-    border: 1px solid #eee; border-radius: 8px;
+    border: 1px solid var(--border-color); border-radius: 8px;
   }
-  .bayar-note { font-size: 0.85rem; color: #666; text-align: center; }
+  .bayar-note { font-size: 0.85rem; color: var(--text-muted); text-align: center; }
 
   .action-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
   .btn-primary {
     display: block; width: 100%; text-align: center;
-    background: #2e7d32; color: white; padding: 0.75rem;
+    background: var(--accent); color: white; padding: 0.75rem;
     border-radius: 6px; text-decoration: none; font-weight: 600;
     border: none; font-size: 1rem; box-sizing: border-box;
   }
   .btn-secondary {
     display: block; width: 100%; text-align: center;
-    background: white; color: #c62828; padding: 0.75rem;
-    border-radius: 6px; font-weight: 600; border: 1px solid #c62828;
+    background: var(--card-bg); color: var(--danger); padding: 0.75rem;
+    border-radius: 6px; font-weight: 600; border: 1px solid var(--danger);
     font-size: 1rem; box-sizing: border-box;
   }
 
   #order-done { text-align: center; margin-top: 3rem; }
-  .done-title { font-size: 1.3rem; font-weight: 700; color: #2e7d32; }
+  .done-title { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
   .order-code {
     font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;
-    background: #f2f2f2; padding: 0.75rem; border-radius: 8px;
+    background: var(--photo-placeholder-bg); color: var(--text-color);
+    padding: 0.75rem; border-radius: 8px;
     margin: 0.75rem 0;
   }
-  .done-note { font-size: 0.85rem; color: #666; margin-bottom: 1.5rem; }
+  .done-note { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
 </style>
