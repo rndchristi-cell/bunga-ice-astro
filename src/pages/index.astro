@@ -45,6 +45,26 @@ const namaToko = data.config?.toko || "Toko";
         }
       }
 
+      // Update harga tampilan real-time saat varian diganti
+      document.querySelectorAll(".product-card").forEach((card) => {
+        const hargaDasar = Number(card.dataset.harga);
+        const hargaEl = card.querySelector(".harga");
+        const selects = card.querySelectorAll(".variant-select");
+
+        function updateHargaTampil() {
+          let tambahan = 0;
+          selects.forEach((select) => {
+            const opt = select.selectedOptions[0];
+            if (opt && opt.dataset.tambahHarga) {
+              tambahan += Number(opt.dataset.tambahHarga);
+            }
+          });
+          hargaEl.textContent = formatRupiah(hargaDasar + tambahan);
+        }
+
+        selects.forEach((select) => select.addEventListener("change", updateHargaTampil));
+      });
+
       document.querySelectorAll(".btn-order").forEach((btn) => {
         btn.addEventListener("click", () => {
           const card = btn.closest(".product-card");
@@ -57,18 +77,19 @@ const namaToko = data.config?.toko || "Toko";
           let adaBelumLengkap = false;
 
           groups.forEach((group) => {
-            const checked = group.querySelector("input[type=radio]:checked");
-            const wajib = group.querySelector(".required") !== null;
-            if (wajib && !checked) {
+            const select = group.querySelector("select");
+            const wajib = select.dataset.wajib === "1";
+            if (wajib && !select.value) {
               adaBelumLengkap = true;
               return;
             }
-            if (checked) {
+            if (select.value) {
+              const opt = select.selectedOptions[0];
               varianTerpilih.push({
                 grup: group.dataset.grup,
-                id_varian: checked.value,
-                nama_varian: checked.nextElementSibling.textContent.trim(),
-                tambah_harga: Number(checked.dataset.tambahHarga || 0),
+                id_varian: select.value,
+                nama_varian: opt.dataset.nama,
+                tambah_harga: Number(opt.dataset.tambahHarga || 0),
               });
             }
           });
@@ -103,4 +124,10 @@ const namaToko = data.config?.toko || "Toko";
     padding-bottom: 5rem;
   }
   header h1 { font-size: 1.3rem; text-align: center; }
+
+  .product-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
 </style>
