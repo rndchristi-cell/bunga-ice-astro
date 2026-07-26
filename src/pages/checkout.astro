@@ -79,10 +79,18 @@ function generateOrderCode() {
   return `BIS-${tgl}-${rand}`;
 }
 
-function generateJamSlots() {
+
+function generateJamSlots(mode) {
   const select = document.getElementById("jam-ambil");
+  select.innerHTML = "";
+
   const jamMulai = 8, jamSelesai = 20, interval = 30;
+  const now = new Date();
+  const menitSekarang = now.getHours() * 60 + now.getMinutes();
+
   for (let menit = jamMulai * 60; menit <= jamSelesai * 60; menit += interval) {
+    if (mode === "hari_ini" && menit <= menitSekarang) continue;
+
     const h = String(Math.floor(menit / 60)).padStart(2, "0");
     const m = String(menit % 60).padStart(2, "0");
     const opt = document.createElement("option");
@@ -90,6 +98,39 @@ function generateJamSlots() {
     opt.textContent = `${h}:${m}`;
     select.appendChild(opt);
   }
+
+  if (select.options.length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Tidak ada jam tersedia";
+    select.appendChild(opt);
+  }
+}
+
+function setupJamAmbil() {
+  const radios = document.querySelectorAll('input[name="ambil"]');
+  const radioHariIni = document.querySelector('input[name="ambil"][value="hari_ini"]');
+  const radioBesok = document.querySelector('input[name="ambil"][value="besok"]');
+
+  const now = new Date();
+  const menitSekarang = now.getHours() * 60 + now.getMinutes();
+  const jamSelesai = 20 * 60;
+
+  // Kalau udah lewat jam tutup, disable "Hari ini" dan paksa pilih "Besok"
+  if (menitSekarang >= jamSelesai) {
+    radioHariIni.disabled = true;
+    radioHariIni.checked = false;
+    radioBesok.checked = true;
+  }
+
+  const modeAktif = document.querySelector('input[name="ambil"]:checked').value;
+  generateJamSlots(modeAktif);
+
+  radios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      generateJamSlots(radio.value);
+    });
+  });
 }
 
 function render() {
