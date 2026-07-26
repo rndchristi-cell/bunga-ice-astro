@@ -33,19 +33,20 @@ const grupEntries = Object.entries(grupList);
 
 <style>
   .product-card {
-    border: 1px solid #e0e0e0; border-radius: 10px; padding: 0.75rem;
+    border: 1px solid var(--border-color); border-radius: 10px; padding: 0.75rem;
     display: flex; flex-direction: column;
+    background: var(--card-bg);
   }
   .product-card img, .no-photo {
-    width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #f2f2f2;
+    width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--photo-placeholder-bg);
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    color: #999; font-size: 0.75rem;
+    color: var(--text-muted); font-size: 0.75rem;
   }
-  .product-card h3 { margin: 0.5rem 0 0.2rem; font-size: 0.95rem; line-height: 1.2; }
-  .deskripsi { font-size: 0.78rem; color: #666; margin: 0; }
-  .harga { font-weight: 700; margin: 0.3rem 0; font-size: 0.95rem; }
+  .product-card h3 { margin: 0.5rem 0 0.2rem; font-size: 0.95rem; line-height: 1.2; color: var(--text-color); }
+  .deskripsi { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+  .harga { font-weight: 700; margin: 0.3rem 0; font-size: 0.95rem; color: var(--text-color); }
   .btn-order {
-    width: 100%; margin-top: auto; padding: 0.55rem; border: none;
+    width: 100%; margin-top: 0.9rem; padding: 0.55rem; border: none;
     border-radius: 6px; background: #2e7d32; color: white; font-weight: 600;
     font-size: 0.85rem;
   }
