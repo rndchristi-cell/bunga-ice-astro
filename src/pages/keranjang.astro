@@ -1,9 +1,11 @@
 ---
+import "../styles/theme.css";
 ---
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Keranjang - Bunga Ice and Snack</title>
   </head>
   <body>
@@ -102,27 +104,28 @@
     padding-bottom: 6rem;
   }
   header { margin-bottom: 1rem; }
-  .back-link { color: #2e7d32; text-decoration: none; font-size: 0.85rem; }
-  header h1 { font-size: 1.2rem; margin: 0.5rem 0 0; }
+  .back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+  header h1 { font-size: 1.2rem; margin: 0.5rem 0 0; color: var(--text-color); }
 
-  .empty-msg { text-align: center; color: #888; margin-top: 3rem; }
+  .empty-msg { text-align: center; color: var(--text-muted); margin-top: 3rem; }
 
   .cart-item {
     display: flex; align-items: center; gap: 0.5rem;
-    border: 1px solid #e0e0e0; border-radius: 8px;
+    border: 1px solid var(--border-color); border-radius: 8px;
     padding: 0.75rem; margin-bottom: 0.75rem;
+    background: var(--card-bg);
   }
   .cart-item-info { flex: 1; }
-  .cart-item-name { font-weight: 600; margin: 0; }
-  .cart-item-varian { font-size: 0.8rem; color: #666; margin: 0.2rem 0; }
-  .cart-item-harga { font-weight: 600; margin: 0; }
+  .cart-item-name { font-weight: 600; margin: 0; color: var(--text-color); }
+  .cart-item-varian { font-size: 0.8rem; color: var(--text-muted); margin: 0.2rem 0; }
+  .cart-item-harga { font-weight: 600; margin: 0; color: var(--text-color); }
 
   .cart-item-qty {
     display: flex; align-items: center; gap: 0.5rem;
   }
   .qty-btn {
-    width: 28px; height: 28px; border-radius: 6px; border: 1px solid #ccc;
-    background: white; font-size: 1rem;
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-color);
+    background: var(--input-bg); color: var(--text-color); font-size: 1rem;
   }
   .remove-btn {
     background: none; border: none; font-size: 1.1rem;
@@ -131,16 +134,16 @@
 
   #cart-footer {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; border-top: 1px solid #e0e0e0;
+    background: var(--card-bg); border-top: 1px solid var(--border-color);
     padding: 1rem; max-width: 480px; margin: 0 auto;
   }
   .total-row {
     display: flex; justify-content: space-between;
-    margin-bottom: 0.75rem; font-size: 1.1rem;
+    margin-bottom: 0.75rem; font-size: 1.1rem; color: var(--text-color);
   }
   .btn-primary {
     display: block; width: 100%; text-align: center;
-    background: #2e7d32; color: white; padding: 0.75rem;
+    background: var(--accent); color: white; padding: 0.75rem;
     border-radius: 6px; text-decoration: none; font-weight: 600;
     box-sizing: border-box;
   }
