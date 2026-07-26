@@ -10,7 +10,7 @@ const fotoList = produk.foto
   : [];
 ---
 
-<article class="product-card" data-id={produk.id} data-harga={produk.harga}>
+<article class="product-card" data-id={produk.id} data-harga={produk.harga} data-foto={fotoList[0] || ""}>
   {
     fotoList.length > 0 ? (
       <div class="photo-carousel" data-fotos={fotoList.join(",")}>
