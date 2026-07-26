@@ -13,6 +13,7 @@ const namaToko = data.config?.toko || "Toko";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>{namaToko}</title>
   </head>
   <body>
@@ -45,7 +46,6 @@ const namaToko = data.config?.toko || "Toko";
         }
       }
 
-      // Update harga tampilan real-time saat varian diganti
       document.querySelectorAll(".product-card").forEach((card) => {
         const hargaDasar = Number(card.dataset.harga);
         const hargaEl = card.querySelector(".harga");
@@ -117,13 +117,42 @@ const namaToko = data.config?.toko || "Toko";
   </body>
 </html>
 
+<style is:global>
+  :root {
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --text-muted: #666666;
+    --border-color: #e0e0e0;
+    --card-bg: #ffffff;
+    --input-bg: #ffffff;
+    --photo-placeholder-bg: #f2f2f2;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-color: #121212;
+      --text-color: #e8e8e8;
+      --text-muted: #a0a0a0;
+      --border-color: #3a3a3a;
+      --card-bg: #1e1e1e;
+      --input-bg: #2a2a2a;
+      --photo-placeholder-bg: #2a2a2a;
+    }
+  }
+
+  body {
+    background: var(--bg-color);
+    color: var(--text-color);
+  }
+</style>
+
 <style>
   body {
     font-family: system-ui, sans-serif;
     max-width: 480px; margin: 0 auto; padding: 1rem;
     padding-bottom: 5rem;
   }
-  header h1 { font-size: 1.3rem; text-align: center; }
+  header h1 { font-size: 1.3rem; text-align: center; color: var(--text-color); }
 
   .product-list {
     display: grid;
