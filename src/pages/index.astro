@@ -133,9 +133,10 @@ const namaToko = data.config?.toko || "Toko";
       document.querySelectorAll(".btn-order").forEach((btn) => {
         btn.addEventListener("click", () => {
           const card = btn.closest(".product-card");
-          const produkId = card.dataset.id;
-          const namaProduk = btn.dataset.nama;
-          const hargaDasar = Number(card.dataset.harga);
+const produkId = card.dataset.id;
+const namaProduk = btn.dataset.nama;
+const hargaDasar = Number(card.dataset.harga);
+const foto = card.dataset.foto || "";
 
           const groups = card.querySelectorAll(".variant-group");
           const varianTerpilih = [];
@@ -167,7 +168,7 @@ const namaToko = data.config?.toko || "Toko";
           const tambahHargaTotal = varianTerpilih.reduce((sum, v) => sum + v.tambah_harga, 0);
           const hargaSatuan = hargaDasar + tambahHargaTotal;
 
-          addToCart({ produkId, namaProduk, hargaSatuan, varianTerpilih, qty: 1 });
+          addToCart({ produkId, namaProduk, hargaSatuan, varianTerpilih, qty: 1, foto });
           updateCartBar();
 
           const label = btn.textContent;
