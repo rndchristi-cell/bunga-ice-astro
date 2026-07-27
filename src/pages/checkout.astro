@@ -5,6 +5,7 @@ import "../styles/theme.css";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Checkout - Bunga Ice and Snack</title>
   </head>
   <body>
@@ -19,7 +20,7 @@ import "../styles/theme.css";
     </div>
 
     <main id="checkout-content" style="display:none;">
-      <section class="ringkasan">
+      <section class="card-section">
         <h2>Ringkasan Pesanan</h2>
         <div id="ringkasan-list"></div>
         <div class="total-row">
@@ -28,27 +29,55 @@ import "../styles/theme.css";
         </div>
       </section>
 
-      <section class="ambil-section">
+      <section class="card-section">
         <h2>Kapan mau diambil?</h2>
         <label class="radio-row">
           <input type="radio" name="ambil" value="hari_ini" checked />
+          <span class="radio-icon">☀️</span>
           <span>Hari ini</span>
         </label>
         <label class="radio-row">
           <input type="radio" name="ambil" value="besok" />
+          <span class="radio-icon">🌙</span>
           <span>Besok</span>
         </label>
       </section>
 
-      <section class="jam-section">
+      <section class="card-section">
         <h2>Jam pengambilan</h2>
         <select id="jam-ambil" class="jam-select"></select>
       </section>
 
-      <section class="bayar-section">
+      <section class="card-section">
+        <h2>Catatan (opsional)</h2>
+        <textarea
+          id="catatan"
+          class="catatan-input"
+          placeholder="Contoh: less ice, jangan pake sedotan, dll"
+          rows="2"
+        ></textarea>
+      </section>
+
+      <section class="card-section">
+        <h2>Data Kontak</h2>
+        <label class="input-label" for="nama-pemesan">Nama</label>
+        <input type="text" id="nama-pemesan" class="text-input" placeholder="Nama kamu" />
+
+        <label class="input-label" for="no-hp">No. HP (opsional)</label>
+        <input type="tel" id="no-hp" class="text-input" placeholder="08xxxxxxxxxx" />
+      </section>
+
+      <section class="card-section">
         <h2>Pembayaran (QRIS)</h2>
-        <img src="/qris-bunga-ice.png" alt="QRIS Bunga Ice and Snack" class="qris-img" />
-        <p class="bayar-note">Scan QRIS di atas, lalu kirim bukti bayar ke chat Telegram bot dengan menyebut kode pesanan kamu.</p>
+        <div class="qris-wrapper">
+          <img src="/qris-bunga-ice.png" alt="QRIS Bunga Ice and Snack" class="qris-img" />
+        </div>
+        <a href="/qris-bunga-ice.png" download="QRIS-Bunga-Ice.png" class="btn-download">
+          ⬇️ Simpan QRIS
+        </a>
+        <p class="bayar-note">
+          Scan QRIS di atas dari aplikasi bank/e-wallet kamu, atau simpan/screenshot gambar QRIS-nya dulu kalau mau scan dari HP lain.
+        </p>
       </section>
 
       <div class="action-buttons">
@@ -60,9 +89,18 @@ import "../styles/theme.css";
     <div id="order-done" style="display:none;">
       <p class="done-title">✅ Pesanan Dibuat!</p>
       <p>Kode Pesanan kamu:</p>
-      <p class="order-code" id="order-code-display"></p>
-      <p class="done-note">Kirim bukti bayar ke chat bot Telegram dengan menyebut kode pesanan di atas ya.</p>
-      <a href="/" class="btn-primary">Kembali ke Beranda</a>
+      <div class="order-code-row">
+        <p class="order-code" id="order-code-display"></p>
+        <button id="btn-copy-kode" class="btn-copy">📋 Copy</button>
+      </div>
+      <p class="done-note">
+        Copy kode di atas, lalu kirim ke bot Telegram kami dengan format:<br />
+        <strong>"ini bukti kode order [kode kamu]"</strong>
+      </p>
+      <a id="link-bot" href="https://t.me/bungaiceorder_bot" target="_blank" class="btn-primary">
+        💬 Buka Chat Bot Telegram
+      </a>
+      <a href="/" class="btn-secondary-link">Kembali ke Beranda</a>
     </div>
 
     <script>
@@ -78,7 +116,6 @@ function generateOrderCode() {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `BIS-${tgl}-${rand}`;
 }
-
 
 function generateJamSlots(mode) {
   const select = document.getElementById("jam-ambil");
@@ -116,7 +153,6 @@ function setupJamAmbil() {
   const menitSekarang = now.getHours() * 60 + now.getMinutes();
   const jamSelesai = 20 * 60;
 
-  // Kalau udah lewat jam tutup, disable "Hari ini" dan paksa pilih "Besok"
   if (menitSekarang >= jamSelesai) {
     radioHariIni.disabled = true;
     radioHariIni.checked = false;
@@ -175,12 +211,18 @@ document.getElementById("btn-konfirmasi").addEventListener("click", async () => 
   const cart = getCart();
   const ambil = document.querySelector('input[name="ambil"]:checked').value;
   const jamAmbil = document.getElementById("jam-ambil").value;
+  const catatan = document.getElementById("catatan").value.trim();
+  const namaPemesan = document.getElementById("nama-pemesan").value.trim();
+  const noHp = document.getElementById("no-hp").value.trim();
   const orderCode = generateOrderCode();
 
   const order = {
     orderCode,
     ambil,
     jamAmbil,
+    catatan,
+    namaPemesan,
+    noHp,
     items: cart,
     total: getCartTotal(cart),
     createdAt: new Date().toISOString(),
@@ -210,6 +252,19 @@ document.getElementById("btn-konfirmasi").addEventListener("click", async () => 
   }
 });
 
+document.getElementById("btn-copy-kode").addEventListener("click", async () => {
+  const kode = document.getElementById("order-code-display").textContent;
+  try {
+    await navigator.clipboard.writeText(kode);
+    const btn = document.getElementById("btn-copy-kode");
+    const label = btn.textContent;
+    btn.textContent = "✓ Tersalin";
+    setTimeout(() => (btn.textContent = label), 1500);
+  } catch (err) {
+    alert("Gagal copy. Silakan salin manual ya.");
+  }
+});
+
 window.addEventListener("cart-updated", render);
 setupJamAmbil();
 render();
@@ -217,7 +272,7 @@ render();
   </body>
 </html>
 
-<style>
+<style is:global>
   body {
     font-family: system-ui, sans-serif;
     max-width: 480px; margin: 0 auto; padding: 1rem;
@@ -228,8 +283,14 @@ render();
 
   .empty-msg { text-align: center; color: var(--text-muted); margin-top: 3rem; }
 
-  section { margin-bottom: 1.5rem; }
-  h2 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-color); }
+  .card-section {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1rem;
+    background: var(--card-bg);
+  }
+  .card-section h2 { font-size: 0.95rem; margin: 0 0 0.6rem; color: var(--text-color); }
 
   .ringkasan-item {
     display: flex; justify-content: space-between;
@@ -239,15 +300,19 @@ render();
     display: flex; justify-content: space-between;
     font-size: 1.1rem; margin-top: 0.75rem;
     border-top: 1px solid var(--border-color); padding-top: 0.5rem;
-    color: var(--text-color);
+    color: var(--text-color); font-weight: 700;
+    background: var(--photo-placeholder-bg);
+    margin-left: -1rem; margin-right: -1rem; margin-bottom: -1rem;
+    padding: 0.75rem 1rem; border-radius: 0 0 10px 10px;
   }
 
   .radio-row {
     display: flex; align-items: center; gap: 0.5rem;
     border: 1px solid var(--border-color); border-radius: 6px;
     padding: 0.6rem; margin-bottom: 0.5rem;
-    color: var(--text-color); background: var(--card-bg);
+    color: var(--text-color); background: var(--input-bg);
   }
+  .radio-icon { font-size: 1.1rem; }
 
   .jam-select {
     width: 100%; padding: 0.6rem; border-radius: 6px;
@@ -255,11 +320,40 @@ render();
     background: var(--input-bg); color: var(--text-color);
   }
 
-  .qris-img {
-    width: 100%; max-width: 280px; display: block; margin: 0 auto 0.75rem;
-    border: 1px solid var(--border-color); border-radius: 8px;
+  .catatan-input {
+    width: 100%; padding: 0.6rem; border-radius: 6px;
+    border: 1px solid var(--border-color); font-size: 0.9rem;
+    background: var(--input-bg); color: var(--text-color);
+    box-sizing: border-box; font-family: inherit; resize: vertical;
   }
-  .bayar-note { font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+
+  .input-label {
+    display: block; font-size: 0.8rem; color: var(--text-muted);
+    margin: 0.5rem 0 0.25rem;
+  }
+  .input-label:first-of-type { margin-top: 0; }
+  .text-input {
+    width: 100%; padding: 0.6rem; border-radius: 6px;
+    border: 1px solid var(--border-color); font-size: 0.9rem;
+    background: var(--input-bg); color: var(--text-color);
+    box-sizing: border-box;
+  }
+
+  .qris-wrapper {
+    background: white; border-radius: 8px; padding: 0.75rem;
+    display: flex; justify-content: center; margin-bottom: 0.6rem;
+  }
+  .qris-img {
+    width: 100%; max-width: 240px; display: block;
+  }
+  .btn-download {
+    display: block; text-align: center; width: 100%;
+    padding: 0.5rem; margin-bottom: 0.6rem;
+    border: 1px solid var(--accent); border-radius: 6px;
+    color: var(--accent); text-decoration: none; font-weight: 600;
+    font-size: 0.85rem; box-sizing: border-box;
+  }
+  .bayar-note { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin: 0; }
 
   .action-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
   .btn-primary {
@@ -274,14 +368,29 @@ render();
     border-radius: 6px; font-weight: 600; border: 1px solid var(--danger);
     font-size: 1rem; box-sizing: border-box;
   }
+  .btn-secondary-link {
+    display: block; width: 100%; text-align: center;
+    color: var(--text-muted); padding: 0.6rem; margin-top: 0.5rem;
+    text-decoration: underline; font-size: 0.85rem;
+  }
 
-  #order-done { text-align: center; margin-top: 3rem; }
+  #order-done { text-align: center; margin-top: 2rem; }
   .done-title { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
-  .order-code {
-    font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;
-    background: var(--photo-placeholder-bg); color: var(--text-color);
-    padding: 0.75rem; border-radius: 8px;
+
+  .order-code-row {
+    display: flex; align-items: center; gap: 0.5rem;
     margin: 0.75rem 0;
   }
-  .done-note { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .order-code {
+    flex: 1; font-size: 1.3rem; font-weight: 700; letter-spacing: 1px;
+    background: var(--photo-placeholder-bg); color: var(--text-color);
+    padding: 0.75rem; border-radius: 8px; margin: 0;
+  }
+  .btn-copy {
+    padding: 0.75rem 0.9rem; border-radius: 8px; border: 1px solid var(--border-color);
+    background: var(--card-bg); color: var(--text-color); font-size: 0.85rem;
+    font-weight: 600; white-space: nowrap;
+  }
+
+  .done-note { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
 </style>
