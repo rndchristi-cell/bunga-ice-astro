@@ -2,6 +2,7 @@
 import ProductCard from "../components/ProductCard.astro";
 import CartBar from "../components/CartBar.astro";
 import { getStoreData, groupVarianByProduk } from "../lib/api.js";
+import BannerSlider from "../components/BannerSlider.astro";
 import "../styles/theme.css";
 
 const data = await getStoreData();
@@ -27,6 +28,8 @@ const namaToko = data.config?.toko || "Toko";
   <img src="/bunga-ice-logo.png" alt={namaToko} class="site-logo" />
   <h1>{namaToko}</h1>
 </header>
+
+<BannerSlider />
 
     <main class="product-list">
       {produkAktif.map((produk) => <ProductCard produk={produk} grupVarian={grupVarian} />)}
