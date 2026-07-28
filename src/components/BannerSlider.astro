@@ -1,0 +1,39 @@
+---
+const banners = [
+  "/banner-1.webp",
+  "/banner-2.webp",
+  "/banner-3.webp",
+];
+---
+
+<div class="banner-slider">
+  <div class="banner-track">
+    {banners.map((src, i) => (
+      <img src={src} alt={`Promo ${i + 1}`} class="banner-slide" />
+    ))}
+  </div>
+</div>
+
+<style>
+  .banner-slider {
+    width: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+  }
+  .banner-slider::-webkit-scrollbar {
+    display: none;
+  }
+  .banner-track {
+    display: flex;
+  }
+  .banner-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+</style>
