@@ -100,6 +100,9 @@ import "../styles/theme.css";
       <a id="link-bot" href="https://t.me/bungaiceorder_bot" target="_blank" class="btn-primary">
         💬 Buka Chat Bot Telegram
       </a>
+<a id="link-wa" href="#" target="_blank" class="btn-secondary-link">
+  📱 Konfirmasi via WhatsApp
+</a>
       <a href="/" class="btn-secondary-link">Kembali ke Beranda</a>
     </div>
 
@@ -242,6 +245,9 @@ document.getElementById("btn-konfirmasi").addEventListener("click", async () => 
     if (!res.ok) throw new Error("Gagal kirim order");
 
     document.getElementById("order-code-display").textContent = orderCode;
+
+const waText = encodeURIComponent(`ini bukti kode order ${orderCode}`);
+document.getElementById("link-wa").href = `https://wa.me/6283893344664?text=${waText}`;
     document.getElementById("checkout-content").style.display = "none";
     document.getElementById("order-done").style.display = "block";
     clearCart();
