@@ -10,7 +10,7 @@ const fotoList = Array.isArray(produk.foto)
   : (produk.foto ? String(produk.foto).split(",").map((f) => f.trim()).filter(Boolean) : []);
 ---
 
-<article class="product-card" data-id={produk.id} data-harga={produk.harga} data-foto={fotoList[0] || ""}>
+<article class="product-card" data-id={produk.id} data-harga={produk.harga} data-foto={fotoList[0] || ""} data-kategori-id={produk.kategori_id || ""} data-kategori={produk.kategori || "Menu"}>
   {
     fotoList.length > 0 ? (
       <div class="photo-carousel" data-fotos={fotoList.join(",")}>

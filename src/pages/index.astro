@@ -8,6 +8,7 @@ import "../styles/theme.css";
 const data = await getStoreData();
 const produkAktif = data.produk.filter((p) => p.aktif);
 const grupVarian = groupVarianByProduk(data.varian);
+const kategoriList = [...new Map(produkAktif.map((p) => [p.kategori_id || p.kategori || "Menu", p.kategori || "Menu"])).entries()].map(([id, name]) => ({ id, name }));
 const namaToko = data.config?.toko || "Toko";
 ---
 
@@ -33,9 +34,18 @@ const namaToko = data.config?.toko || "Toko";
 
 <BannerSlider />
 
+    <section class="category-section" aria-label="Filter kategori menu">
+      <div class="category-section-head"><span class="category-eyebrow">JELAJAHI MENU</span><span class="category-hint">Pilih kategori</span></div>
+      <div id="category-filter" class="category-filter" role="tablist" aria-label="Pilih kategori menu">
+        <button type="button" class="category-chip active" data-category="all" aria-selected="true">Semua</button>
+        {kategoriList.map((kategori) => <button type="button" class="category-chip" data-category={kategori.id} aria-selected="false">{kategori.name}</button>)}
+      </div>
+    </section>
+
     <main class="product-list">
       {produkAktif.map((produk) => <ProductCard produk={produk} grupVarian={grupVarian} />)}
     </main>
+    <p id="category-empty" class="category-empty" hidden>Tidak ada menu pada kategori ini.</p>
 
     <CartBar />
 
@@ -54,6 +64,38 @@ const namaToko = data.config?.toko || "Toko";
       }
       function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>\"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+      }
+
+      let selectedCategory = "all";
+      function applyCategoryFilter() {
+        const cards = [...document.querySelectorAll(".product-card")];
+        let visible = 0;
+        cards.forEach((card) => {
+          const match = selectedCategory === "all" || card.dataset.kategoriId === selectedCategory || (!card.dataset.kategoriId && card.dataset.kategori === selectedCategory);
+          card.hidden = !match;
+          if (match) visible += 1;
+        });
+        document.querySelectorAll(".category-chip").forEach((button) => {
+          const active = button.dataset.category === selectedCategory;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-selected", String(active));
+        });
+        const empty = document.getElementById("category-empty");
+        if (empty) empty.hidden = visible > 0 || cards.length === 0;
+      }
+      function bindCategoryFilter() {
+        document.querySelectorAll(".category-chip").forEach((button) => button.addEventListener("click", () => {
+          selectedCategory = button.dataset.category || "all";
+          applyCategoryFilter();
+        }));
+      }
+      function renderCategoryFilter(products) {
+        const filter = document.getElementById("category-filter");
+        if (!filter) return;
+        const unique = [...new Map((products || []).filter((p) => p.aktif !== false).map((p) => [p.kategori_id || p.kategori || "Menu", p.kategori || "Menu"])).entries()];
+        filter.innerHTML = `<button type="button" class="category-chip ${selectedCategory === "all" ? "active" : ""}" data-category="all" aria-selected="${selectedCategory === "all"}">Semua</button>${unique.map(([id, name]) => `<button type="button" class="category-chip ${selectedCategory === id ? "active" : ""}" data-category="${escapeHtml(id)}" aria-selected="${selectedCategory === id}">${escapeHtml(name)}</button>`).join("")}`;
+        bindCategoryFilter();
+        applyCategoryFilter();
       }
 
       function updateCartBar() {
@@ -97,10 +139,13 @@ const namaToko = data.config?.toko || "Toko";
           if (!response.ok) return;
           const data = await response.json();
           const variantsByProduct = data.varian || {};
+          renderCategoryFilter(data.produk || []);
           for (const product of data.produk || []) {
             const card = document.querySelector(`.product-card[data-id="${CSS.escape(product.id)}"]`);
             if (!card) continue;
             card.dataset.harga = product.harga;
+            card.dataset.kategoriId = product.kategori_id || "";
+            card.dataset.kategori = product.kategori || "Menu";
             const price = card.querySelector(".harga");
             if (price) price.dataset.basePrice = product.harga;
             const description = card.querySelector(".deskripsi");
@@ -122,8 +167,12 @@ const namaToko = data.config?.toko || "Toko";
               carousel.querySelector(".photo-dots").innerHTML = photos.map(() => `<span class="dot"></span>`).join("");
             }
           }
+          applyCategoryFilter();
         } catch (error) { console.warn("Katalog live gagal dimuat", error); }
       }
+
+      bindCategoryFilter();
+      applyCategoryFilter();
 
       // Ambil ulang data katalog setelah HTML static tampil agar perubahan admin langsung terlihat.
       refreshLiveCatalog();
@@ -139,6 +188,27 @@ const namaToko = data.config?.toko || "Toko";
           const index = Math.round(track.scrollLeft / track.clientWidth);
           dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
         });
+      });
+
+      // Indikator banner slider tetap halus dan mengikuti posisi geser.
+      document.querySelectorAll(".banner-slider").forEach((slider) => {
+        const track = slider.querySelector(".banner-track");
+        const dots = [...slider.querySelectorAll("[data-banner-dot]")];
+        if (!track || dots.length === 0) return;
+        const setActive = (index) => dots.forEach((dot, i) => {
+          const active = i === index;
+          dot.classList.toggle("active", active);
+          dot.setAttribute("aria-selected", String(active));
+        });
+        track.addEventListener("scroll", () => {
+          const index = Math.max(0, Math.min(dots.length - 1, Math.round(track.scrollLeft / track.clientWidth)));
+          setActive(index);
+        }, { passive: true });
+        dots.forEach((dot) => dot.addEventListener("click", () => {
+          const index = Number(dot.dataset.bannerDot || 0);
+          track.scrollTo({ left: index * track.clientWidth, behavior: "smooth" });
+          setActive(index);
+        }));
       });
 
       // Lightbox popup foto
@@ -260,6 +330,67 @@ const foto = card.dataset.foto || "";
   border-radius: 6px;
 }
   header h1 { font-size: 1.3rem; text-align: center; color: var(--text-color); }
+
+  .category-section {
+    margin: 0 0 1rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+  .category-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+  .category-eyebrow {
+    color: var(--text-color);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+  .category-hint {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+  }
+  .category-filter {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0.1rem;
+  }
+  .category-filter::-webkit-scrollbar { display: none; }
+  .category-chip {
+    flex: 0 0 auto;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.5rem 0.85rem;
+    background: transparent;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .category-chip.active {
+    border-color: #2e7d32;
+    background: #2e7d32;
+    color: #fff;
+  }
+  .category-chip:active { transform: scale(0.97); }
+  .product-card[hidden] { display: none; }
+  .category-empty {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+    color: var(--text-muted);
+    text-align: center;
+  }
 
   .product-list {
     display: grid;
