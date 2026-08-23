@@ -13,7 +13,14 @@ export async function getStoreData() {
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      return await res.json();
+      const data = await res.json();
+      const assetOrigin = new URL(url).origin;
+      for (const product of data.produk || []) {
+        product.foto = (product.foto || []).map((photo) => {
+          try { return new URL(photo, assetOrigin).href; } catch { return photo; }
+        });
+      }
+      return data;
     } catch (error) {
       lastError = error;
     }
