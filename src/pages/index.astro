@@ -39,10 +39,14 @@ const namaToko = data.config?.toko || "Toko";
         <span class="category-toggle-copy"><span class="category-eyebrow">JELAJAHI MENU</span><span id="category-current" class="category-current">Semua kategori</span></span>
         <span class="category-chevron" aria-hidden="true">⌄</span>
       </button>
-      <div id="category-filter" class="category-filter" role="tablist" aria-label="Pilih kategori menu" hidden>
-        <span class="category-hint">Pilih kategori</span>
-        <button type="button" class="category-chip active" data-category="all" aria-selected="true">Semua</button>
-        {kategoriList.map((kategori) => <button type="button" class="category-chip" data-category={kategori.id} aria-selected="false">{kategori.name}</button>)}
+      <div id="category-filter" class="category-picker-overlay" role="dialog" aria-modal="true" aria-label="Pilih kategori menu" hidden>
+        <div class="category-picker-sheet">
+          <div class="category-picker-head"><div><span class="category-hint">PILIH KATEGORI</span><strong>Kelompok menu</strong></div><button type="button" id="category-close" class="category-close" aria-label="Tutup pilihan kategori">×</button></div>
+          <div id="category-options" class="category-options" role="tablist">
+            <button type="button" class="category-chip active" data-category="all" aria-selected="true"><span>Semua menu</span><span class="category-radio" aria-hidden="true"></span></button>
+            {kategoriList.map((kategori) => <button type="button" class="category-chip" data-category={kategori.id} aria-selected="false"><span>{kategori.name}</span><span class="category-radio" aria-hidden="true"></span></button>)}
+          </div>
+        </div>
       </div>
     </section>
 
@@ -73,6 +77,7 @@ const namaToko = data.config?.toko || "Toko";
       let selectedCategory = "all";
       const categoryToggle = document.getElementById("category-toggle");
       const categoryFilter = document.getElementById("category-filter");
+      const categoryOptions = document.getElementById("category-options");
       const categoryCurrent = document.getElementById("category-current");
       function setCategoryOpen(open) {
         if (!categoryToggle || !categoryFilter) return;
@@ -109,10 +114,10 @@ const namaToko = data.config?.toko || "Toko";
         }));
       }
       function renderCategoryFilter(products) {
-        const filter = document.getElementById("category-filter");
-        if (!filter) return;
+        const options = document.getElementById("category-options");
+        if (!options) return;
         const unique = [...new Map((products || []).filter((p) => p.aktif !== false).map((p) => [p.kategori_id || p.kategori || "Menu", p.kategori || "Menu"])).entries()];
-        filter.innerHTML = `<span class="category-hint">Pilih kategori</span><button type="button" class="category-chip ${selectedCategory === "all" ? "active" : ""}" data-category="all" aria-selected="${selectedCategory === "all"}">Semua</button>${unique.map(([id, name]) => `<button type="button" class="category-chip ${selectedCategory === id ? "active" : ""}" data-category="${escapeHtml(id)}" aria-selected="${selectedCategory === id}">${escapeHtml(name)}</button>`).join("")}`;
+        options.innerHTML = `<button type="button" class="category-chip ${selectedCategory === "all" ? "active" : ""}" data-category="all" aria-selected="${selectedCategory === "all"}"><span>Semua menu</span><span class="category-radio" aria-hidden="true"></span></button>${unique.map(([id, name]) => `<button type="button" class="category-chip ${selectedCategory === id ? "active" : ""}" data-category="${escapeHtml(id)}" aria-selected="${selectedCategory === id}"><span>${escapeHtml(name)}</span><span class="category-radio" aria-hidden="true"></span></button>`).join("")}`;
         bindCategoryFilter();
         applyCategoryFilter();
       }
@@ -191,6 +196,9 @@ const namaToko = data.config?.toko || "Toko";
       }
 
       categoryToggle?.addEventListener("click", () => setCategoryOpen(categoryFilter?.hidden));
+      document.getElementById("category-close")?.addEventListener("click", () => setCategoryOpen(false));
+      categoryFilter?.addEventListener("click", (event) => { if (event.target === categoryFilter) setCategoryOpen(false); });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape" && categoryFilter && !categoryFilter.hidden) setCategoryOpen(false); });
       bindCategoryFilter();
       applyCategoryFilter();
 
@@ -358,61 +366,32 @@ const foto = card.dataset.foto || "";
 }
   header h1 { font-size: 1.3rem; text-align: center; color: var(--text-color); }
 
-  .category-section {
-    margin: 0 0 1rem;
-    padding: 0;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.045);
-    overflow: hidden;
-  }
-  .category-accordion-toggle {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.9rem;
-    border: 0;
-    background: transparent;
-    color: var(--text-color);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  .category-accordion-toggle:active { background: rgba(255, 255, 255, 0.06); }
-  .category-toggle-copy { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-  .category-eyebrow { color: var(--text-color); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; }
-  .category-current { color: var(--text-muted); font-size: 0.82rem; font-weight: 600; }
-  .category-chevron { color: var(--text-muted); font-size: 1.2rem; line-height: 1; transition: transform 0.18s ease; }
+  .category-section { margin: 0 0 1rem; padding: 0; border: 1px solid var(--border-color); border-radius: 14px; background: var(--card-bg); overflow: hidden; }
+  .category-accordion-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .9rem; border: 0; background: transparent; color: var(--text-color); font: inherit; text-align: left; cursor: pointer; }
+  .category-accordion-toggle:active { background: rgba(255,255,255,.06); }
+  .category-toggle-copy { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+  .category-eyebrow { color: var(--text-muted); font-size: .68rem; font-weight: 800; letter-spacing: .1em; }
+  .category-current { color: var(--text-color); font-size: .9rem; font-weight: 750; }
+  .category-chevron { color: var(--text-muted); font-size: 1.25rem; line-height: 1; transition: transform .18s ease; }
   .category-accordion-toggle.is-open .category-chevron { transform: rotate(180deg); }
-  .category-filter {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-    padding: 0 0.9rem 0.9rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  .category-filter[hidden] { display: none; }
-  .category-hint { width: 100%; padding-top: 0.75rem; color: var(--text-muted); font-size: 0.72rem; }
-  .category-chip {
-    flex: 0 0 auto;
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    padding: 0.5rem 0.85rem;
-    background: transparent;
-    color: var(--text-color);
-    font: inherit;
-    font-size: 0.78rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
-  }
-  .category-chip.active { border-color: #2e7d32; background: #2e7d32; color: #fff; }
-  .category-chip:active { transform: scale(0.97); }
+  .category-picker-overlay { position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-start; justify-content: center; padding: min(22vh, 10rem) 1rem 1rem; background: rgba(0,0,0,.52); backdrop-filter: blur(3px); }
+  .category-picker-overlay[hidden] { display: none; }
+  .category-picker-sheet { width: min(100%, 420px); overflow: hidden; border: 1px solid var(--border-color); border-radius: 18px; background: var(--card-bg); box-shadow: 0 18px 44px rgba(0,0,0,.3); animation: category-sheet-in .18s ease-out; }
+  .category-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--border-color); }
+  .category-picker-head>div { display: flex; flex-direction: column; gap: .22rem; }
+  .category-hint { color: var(--text-muted); font-size: .68rem; font-weight: 800; letter-spacing: .1em; }
+  .category-picker-head strong { color: var(--text-color); font-size: 1rem; }
+  .category-close { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--border-color); border-radius: 50%; background: transparent; color: var(--text-muted); font-size: 1.35rem; line-height: 1; cursor: pointer; }
+  .category-options { display: flex; flex-direction: column; padding: .35rem 0; }
+  .category-chip { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1.1rem; border: 0; border-bottom: 1px solid var(--border-color); background: transparent; color: var(--text-color); font: inherit; font-size: .95rem; font-weight: 650; text-align: left; cursor: pointer; }
+  .category-chip:last-child { border-bottom: 0; }
+  .category-chip:active { background: rgba(46,125,50,.1); }
+  .category-radio { flex: 0 0 auto; width: 18px; height: 18px; border: 2px solid var(--text-muted); border-radius: 50%; }
+  .category-chip.active { color: var(--accent); }
+  .category-chip.active .category-radio { border: 5px solid var(--accent); }
   .product-card[hidden] { display: none; }
   .category-empty { margin: 1rem 0; padding: 1rem; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted); text-align: center; }
+  @keyframes category-sheet-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
   .product-list {
     display: grid;
