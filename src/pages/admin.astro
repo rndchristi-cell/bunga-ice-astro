@@ -26,7 +26,7 @@ import "../styles/theme.css";
       <section id="products" class="product-grid" hidden></section>
     </main>
     <script>
-      const API = "https://bunga-ice-worker.rendychristi.workers.dev";
+      const API = import.meta.env.PUBLIC_ADMIN_API_URL || "https://bunga-ice-worker.rendychristi.workers.dev";
       let auth = sessionStorage.getItem("bungaice_admin_auth") || "";
       const $ = (id) => document.getElementById(id);
       function showStatus(message, error = false) {
