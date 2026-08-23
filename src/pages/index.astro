@@ -118,7 +118,7 @@ const namaToko = data.config?.toko || "Toko";
             const carousel = card.querySelector(".photo-carousel");
             if (carousel && photos.length) {
               carousel.dataset.fotos = photos.join(",");
-              carousel.querySelector(".photo-track").innerHTML = photos.map((photo, i) => `<img src="${photo}" alt="${escapeHtml(product.nama)}" loading="lazy" class="photo-slide" data-index="${i}" />`).join("");
+              carousel.querySelector(".photo-track").innerHTML = photos.map((photo, i) => `<img src="${photo}" alt="${escapeHtml(product.nama)}" loading="lazy" class="photo-slide" data-index="${i}" style="display:block;width:100%;height:100%;object-fit:cover;flex:0 0 100%;" />`).join("");
               carousel.querySelector(".photo-dots").innerHTML = photos.map(() => `<span class="dot"></span>`).join("");
             }
           }
