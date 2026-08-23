@@ -35,8 +35,12 @@ const namaToko = data.config?.toko || "Toko";
 <BannerSlider />
 
     <section class="category-section" aria-label="Filter kategori menu">
-      <div class="category-section-head"><span class="category-eyebrow">JELAJAHI MENU</span><span class="category-hint">Pilih kategori</span></div>
-      <div id="category-filter" class="category-filter" role="tablist" aria-label="Pilih kategori menu">
+      <button type="button" id="category-toggle" class="category-accordion-toggle" aria-expanded="false" aria-controls="category-filter">
+        <span class="category-toggle-copy"><span class="category-eyebrow">JELAJAHI MENU</span><span id="category-current" class="category-current">Semua kategori</span></span>
+        <span class="category-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div id="category-filter" class="category-filter" role="tablist" aria-label="Pilih kategori menu" hidden>
+        <span class="category-hint">Pilih kategori</span>
         <button type="button" class="category-chip active" data-category="all" aria-selected="true">Semua</button>
         {kategoriList.map((kategori) => <button type="button" class="category-chip" data-category={kategori.id} aria-selected="false">{kategori.name}</button>)}
       </div>
@@ -67,6 +71,19 @@ const namaToko = data.config?.toko || "Toko";
       }
 
       let selectedCategory = "all";
+      const categoryToggle = document.getElementById("category-toggle");
+      const categoryFilter = document.getElementById("category-filter");
+      const categoryCurrent = document.getElementById("category-current");
+      function setCategoryOpen(open) {
+        if (!categoryToggle || !categoryFilter) return;
+        categoryFilter.hidden = !open;
+        categoryToggle.setAttribute("aria-expanded", String(open));
+        categoryToggle.classList.toggle("is-open", open);
+      }
+      function updateCategorySummary() {
+        const active = document.querySelector(".category-chip.active");
+        if (categoryCurrent) categoryCurrent.textContent = active?.textContent?.trim() || "Semua kategori";
+      }
       function applyCategoryFilter() {
         const cards = [...document.querySelectorAll(".product-card")];
         let visible = 0;
@@ -82,18 +99,20 @@ const namaToko = data.config?.toko || "Toko";
         });
         const empty = document.getElementById("category-empty");
         if (empty) empty.hidden = visible > 0 || cards.length === 0;
+        updateCategorySummary();
       }
       function bindCategoryFilter() {
         document.querySelectorAll(".category-chip").forEach((button) => button.addEventListener("click", () => {
           selectedCategory = button.dataset.category || "all";
           applyCategoryFilter();
+          setCategoryOpen(false);
         }));
       }
       function renderCategoryFilter(products) {
         const filter = document.getElementById("category-filter");
         if (!filter) return;
         const unique = [...new Map((products || []).filter((p) => p.aktif !== false).map((p) => [p.kategori_id || p.kategori || "Menu", p.kategori || "Menu"])).entries()];
-        filter.innerHTML = `<button type="button" class="category-chip ${selectedCategory === "all" ? "active" : ""}" data-category="all" aria-selected="${selectedCategory === "all"}">Semua</button>${unique.map(([id, name]) => `<button type="button" class="category-chip ${selectedCategory === id ? "active" : ""}" data-category="${escapeHtml(id)}" aria-selected="${selectedCategory === id}">${escapeHtml(name)}</button>`).join("")}`;
+        filter.innerHTML = `<span class="category-hint">Pilih kategori</span><button type="button" class="category-chip ${selectedCategory === "all" ? "active" : ""}" data-category="all" aria-selected="${selectedCategory === "all"}">Semua</button>${unique.map(([id, name]) => `<button type="button" class="category-chip ${selectedCategory === id ? "active" : ""}" data-category="${escapeHtml(id)}" aria-selected="${selectedCategory === id}">${escapeHtml(name)}</button>`).join("")}`;
         bindCategoryFilter();
         applyCategoryFilter();
       }
@@ -171,6 +190,7 @@ const namaToko = data.config?.toko || "Toko";
         } catch (error) { console.warn("Katalog live gagal dimuat", error); }
       }
 
+      categoryToggle?.addEventListener("click", () => setCategoryOpen(categoryFilter?.hidden));
       bindCategoryFilter();
       applyCategoryFilter();
 
@@ -220,28 +240,35 @@ const namaToko = data.config?.toko || "Toko";
       let currentIndex = 0;
 
       function openLightbox(fotos, index) {
-        currentFotos = fotos;
-        currentIndex = index;
+        currentFotos = fotos.filter(Boolean);
+        currentIndex = Math.max(0, Math.min(index, currentFotos.length - 1));
         lightboxImg.src = currentFotos[currentIndex];
+        lightboxImg.alt = "Foto produk";
         lightbox.style.display = "flex";
-        btnPrev.style.display = currentFotos.length > 1  ? "flex" : "none";
-        btnNext.style.display = currentFotos.length > 1  ? "flex" : "none";
+        document.body.style.overflow = "hidden";
+        btnPrev.style.display = currentFotos.length > 1 ? "flex" : "none";
+        btnNext.style.display = currentFotos.length > 1 ? "flex" : "none";
+      }
+      function closeLightbox() {
+        lightbox.style.display = "none";
+        lightboxImg.src = "";
+        document.body.style.overflow = "";
       }
 
-      document.querySelectorAll(".photo-slide").forEach((img) => {
-        img.addEventListener("click", () => {
-          const carousel = img.closest(".photo-carousel");
-          const fotos = carousel.dataset.fotos.split(",");
-          const index = Number(img.dataset.index);
-          openLightbox(fotos, index);
-        });
+      document.addEventListener("click", (event) => {
+        const img = event.target.closest?.(".photo-slide");
+        if (!img) return;
+        const carousel = img.closest(".photo-carousel");
+        const fotos = (carousel?.dataset.fotos || [...carousel.querySelectorAll(".photo-slide")].map((photo) => photo.src).join(",")).split(",");
+        openLightbox(fotos, Number(img.dataset.index) || 0);
       });
 
-      document.getElementById("lightbox-close").addEventListener("click", () => {
-        lightbox.style.display = "none";
-      });
+      document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
       lightbox.addEventListener("click", (e) => {
-        if (e.target === lightbox) lightbox.style.display = "none";
+        if (e.target === lightbox) closeLightbox();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && lightbox.style.display !== "none") closeLightbox();
       });
       btnPrev.addEventListener("click", () => {
         currentIndex = (currentIndex - 1 + currentFotos.length) % currentFotos.length;
@@ -333,36 +360,42 @@ const foto = card.dataset.foto || "";
 
   .category-section {
     margin: 0 0 1rem;
-    padding: 0.85rem 0.9rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.045);
+    overflow: hidden;
   }
-  .category-section-head {
+  .category-accordion-toggle {
+    width: 100%;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: 0.65rem;
-  }
-  .category-eyebrow {
+    padding: 0.9rem;
+    border: 0;
+    background: transparent;
     color: var(--text-color);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
   }
-  .category-hint {
-    color: var(--text-muted);
-    font-size: 0.72rem;
-  }
+  .category-accordion-toggle:active { background: rgba(255, 255, 255, 0.06); }
+  .category-toggle-copy { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+  .category-eyebrow { color: var(--text-color); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; }
+  .category-current { color: var(--text-muted); font-size: 0.82rem; font-weight: 600; }
+  .category-chevron { color: var(--text-muted); font-size: 1.2rem; line-height: 1; transition: transform 0.18s ease; }
+  .category-accordion-toggle.is-open .category-chevron { transform: rotate(180deg); }
   .category-filter {
     display: flex;
+    align-items: center;
     gap: 0.45rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 0.1rem;
+    flex-wrap: wrap;
+    padding: 0 0.9rem 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .category-filter::-webkit-scrollbar { display: none; }
+  .category-filter[hidden] { display: none; }
+  .category-hint { width: 100%; padding-top: 0.75rem; color: var(--text-muted); font-size: 0.72rem; }
   .category-chip {
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
@@ -376,21 +409,10 @@ const foto = card.dataset.foto || "";
     cursor: pointer;
     transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
   }
-  .category-chip.active {
-    border-color: #2e7d32;
-    background: #2e7d32;
-    color: #fff;
-  }
+  .category-chip.active { border-color: #2e7d32; background: #2e7d32; color: #fff; }
   .category-chip:active { transform: scale(0.97); }
   .product-card[hidden] { display: none; }
-  .category-empty {
-    margin: 1rem 0;
-    padding: 1rem;
-    border: 1px dashed var(--border-color);
-    border-radius: 12px;
-    color: var(--text-muted);
-    text-align: center;
-  }
+  .category-empty { margin: 1rem 0; padding: 1rem; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted); text-align: center; }
 
   .product-list {
     display: grid;
@@ -399,19 +421,23 @@ const foto = card.dataset.foto || "";
   }
 
   .lightbox {
-    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9);
-    z-index: 100; display: flex; align-items: center; justify-content: center;
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.25rem;
+    background: rgba(8, 12, 9, 0.92);
+    backdrop-filter: blur(6px);
   }
-  .lightbox img { max-width: 90%; max-height: 80%; object-fit: contain; }
+  .lightbox img { max-width: 90%; max-height: 82%; object-fit: contain; border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
   .lightbox-close {
-    position: absolute; top: 1rem; right: 1rem;
-    background: none; border: none; color: white; font-size: 1.5rem;
+    position: absolute; top: 1rem; right: 1rem; z-index: 1;
+    width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.28); border-radius: 50%;
+    background: rgba(255,255,255,.14); color: white; font-size: 1.35rem; cursor: pointer;
   }
   .lightbox-nav {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.2); border: none; color: white;
-    font-size: 1.5rem; width: 44px; height: 44px; border-radius: 50%;
+    position: absolute; top: 50%; z-index: 1; transform: translateY(-50%);
     display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.28); border-radius: 50%;
+    background: rgba(255,255,255,.14); color: white; font-size: 1.8rem; cursor: pointer;
   }
   .lightbox-prev { left: 0.5rem; }
   .lightbox-next { right: 0.5rem; }
