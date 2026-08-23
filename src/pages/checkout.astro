@@ -236,7 +236,8 @@ document.getElementById("btn-konfirmasi").addEventListener("click", async () => 
   btnKonfirmasi.textContent = "Memproses...";
 
   try {
-    const res = await fetch("https://bunga-ice-worker.rendychristi.workers.dev", {
+    const orderApi = import.meta.env.PUBLIC_ORDER_API_URL || "https://bunga-ice-worker.rendychristi.workers.dev";
+    const res = await fetch(orderApi, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(order),
