@@ -52,6 +52,9 @@ const namaToko = data.config?.toko || "Toko";
       function formatRupiah(n) {
         return `Rp${Number(n).toLocaleString("id-ID")}`;
       }
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>\"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+      }
 
       function updateCartBar() {
         const cart = getCart();
@@ -85,6 +88,45 @@ const namaToko = data.config?.toko || "Toko";
 
         selects.forEach((select) => select.addEventListener("change", updateHargaTampil));
       });
+
+      async function refreshLiveCatalog() {
+        const catalogUrl = import.meta.env.PUBLIC_CATALOG_URL;
+        if (!catalogUrl) return;
+        try {
+          const response = await fetch(`${catalogUrl}${catalogUrl.includes("?") ? "&" : "?"}live=${Date.now()}`, { cache: "no-store" });
+          if (!response.ok) return;
+          const data = await response.json();
+          const variantsByProduct = data.varian || {};
+          for (const product of data.produk || []) {
+            const card = document.querySelector(`.product-card[data-id="${CSS.escape(product.id)}"]`);
+            if (!card) continue;
+            card.dataset.harga = product.harga;
+            const price = card.querySelector(".harga");
+            if (price) price.dataset.basePrice = product.harga;
+            const description = card.querySelector(".deskripsi");
+            if (description) description.textContent = product.deskripsi || "";
+            const groups = variantsByProduct[product.id] || {};
+            card.querySelectorAll(".variant-group").forEach((group) => {
+              const select = group.querySelector(".variant-select");
+              const groupOptions = groups[group.dataset.grup] || [];
+              const current = select.value;
+              select.innerHTML = groupOptions.map((option) => `<option value="${option.id_varian}" data-tambah-harga="${option.tambah_harga || 0}" data-nama="${escapeHtml(option.nama_varian)}">${escapeHtml(option.nama_varian)}${Number(option.tambah_harga) > 0 ? ` (+${formatRupiah(option.tambah_harga)})` : ""}</option>`).join("");
+              select.dataset.wajib = groupOptions[0]?.wajib ? "1" : "0";
+              if ([...select.options].some((option) => option.value === current)) select.value = current;
+            });
+            const photos = (product.foto || []).map((photo) => { try { return new URL(photo, new URL(catalogUrl).origin).href; } catch { return photo; } });
+            const carousel = card.querySelector(".photo-carousel");
+            if (carousel && photos.length) {
+              carousel.dataset.fotos = photos.join(",");
+              carousel.querySelector(".photo-track").innerHTML = photos.map((photo, i) => `<img src="${photo}" alt="${escapeHtml(product.nama)}" loading="lazy" class="photo-slide" data-index="${i}" />`).join("");
+              carousel.querySelector(".photo-dots").innerHTML = photos.map(() => `<span class="dot"></span>`).join("");
+            }
+          }
+        } catch (error) { console.warn("Katalog live gagal dimuat", error); }
+      }
+
+      // Ambil ulang data katalog setelah HTML static tampil agar perubahan admin langsung terlihat.
+      refreshLiveCatalog();
 
       // Sinkronisasi dot carousel saat digeser
       document.querySelectorAll(".photo-carousel").forEach((carousel) => {
