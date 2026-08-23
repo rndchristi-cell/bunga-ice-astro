@@ -5,9 +5,9 @@ import { formatRupiah } from "../lib/api.js";
 const { produk, grupVarian } = Astro.props;
 const grupList = grupVarian[produk.id] || {};
 const grupEntries = Object.entries(grupList);
-const fotoList = produk.foto
-  ? produk.foto.split(",").map((f) => f.trim()).filter(Boolean)
-  : [];
+const fotoList = Array.isArray(produk.foto)
+  ? produk.foto.filter(Boolean)
+  : (produk.foto ? String(produk.foto).split(",").map((f) => f.trim()).filter(Boolean) : []);
 ---
 
 <article class="product-card" data-id={produk.id} data-harga={produk.harga} data-foto={fotoList[0] || ""}>

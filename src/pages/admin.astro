@@ -1,0 +1,96 @@
+---
+import "../styles/theme.css";
+---
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Menu - Bunga Ice</title>
+  </head>
+  <body>
+    <main class="admin-shell">
+      <header class="admin-header">
+        <div>
+          <p class="eyebrow">BUNGA ICE AND SNACK</p>
+          <h1>Kelola Menu</h1>
+          <p class="muted">Ubah menu tanpa menyentuh Google Sheet atau repository.</p>
+        </div>
+        <button id="reload" class="secondary">Muat ulang</button>
+      </header>
+      <section id="login" class="panel">
+        <h2>Login Admin</h2>
+        <p class="muted">Masukkan username dan password admin Worker.</p>
+        <button id="login-button" class="primary">Login dan tampilkan menu</button>
+      </section>
+      <section id="status" class="status" hidden></section>
+      <section id="products" class="product-grid" hidden></section>
+    </main>
+    <script>
+      const API = "https://bunga-ice-worker.rendychristi.workers.dev";
+      let auth = sessionStorage.getItem("bungaice_admin_auth") || "";
+      const $ = (id) => document.getElementById(id);
+      function showStatus(message, error = false) {
+        const el = $("status"); el.hidden = false; el.textContent = message;
+        el.className = `status ${error ? "error" : "success"}`;
+      }
+      async function request(path, options = {}) {
+        const headers = { ...(options.headers || {}), Authorization: auth };
+        const res = await fetch(`${API}${path}`, { ...options, headers });
+        if (res.status === 401) throw new Error("AUTH");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) throw new Error(data.error || "Permintaan gagal");
+        return data;
+      }
+      function card(product) {
+        return `<article class="product-editor" data-id="${product.id}">
+          <div class="editor-top"><div><span class="pill">${product.id}</span><h2>${product.name}</h2></div><span class="price-preview">Rp${Number(product.base_price).toLocaleString("id-ID")}</span></div>
+          <label>Nama menu<input data-field="name" value="${escapeHtml(product.name)}" /></label>
+          <label>Deskripsi<textarea data-field="description" rows="3">${escapeHtml(product.description || "")}</textarea></label>
+          <label>Harga<input data-field="base_price" type="number" min="0" step="500" value="${product.base_price}" /></label>
+          <div class="switch-row"><label><input data-field="is_active" type="checkbox" ${product.is_active ? "checked" : ""} /> Tampil di katalog</label><label><input data-field="is_available" type="checkbox" ${product.is_available ? "checked" : ""} /> Tersedia</label></div>
+          <label>Foto produk<input class="file" type="file" accept="image/*" data-upload /></label>
+          <div class="editor-actions"><button class="primary" data-save>Simpan perubahan</button><span class="muted" data-result></span></div>
+        </article>`;
+      }
+      function escapeHtml(value) { return String(value).replace(/[&<>\"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+      async function load() {
+        if (!auth) return;
+        try {
+          const data = await request("/api/admin/products");
+          $("login").hidden = true; $("products").hidden = false;
+          $("products").innerHTML = data.products.map(card).join("");
+          $("products").querySelectorAll("[data-save]").forEach((button) => button.addEventListener("click", save));
+        } catch (err) { if (err.message === "AUTH") { auth = ""; sessionStorage.removeItem("bungaice_admin_auth"); $("login").hidden = false; showStatus("Login admin tidak valid.", true); } else showStatus(err.message, true); }
+      }
+      async function save(event) {
+        const editor = event.target.closest(".product-editor"); const id = editor.dataset.id; const result = editor.querySelector("[data-result]");
+        event.target.disabled = true; result.textContent = "Menyimpan...";
+        try {
+          const body = { id, name: editor.querySelector('[data-field="name"]').value, description: editor.querySelector('[data-field="description"]').value, base_price: Number(editor.querySelector('[data-field="base_price"]').value), is_active: editor.querySelector('[data-field="is_active"]').checked, is_available: editor.querySelector('[data-field="is_available"]').checked };
+          await request("/api/admin/products", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          const file = editor.querySelector("[data-upload]").files[0];
+          if (file) { const form = new FormData(); form.append("file", file); await request("/api/admin/upload", { method: "POST", body: form }); }
+          result.textContent = "Tersimpan"; showStatus(`${id} berhasil diperbarui.`);
+        } catch (err) { result.textContent = "Gagal"; showStatus(err.message, true); } finally { event.target.disabled = false; }
+      }
+      $("login-button").addEventListener("click", () => { const username = prompt("Username admin:"); const password = prompt("Password admin:"); if (!username || !password) return; auth = `Basic ${btoa(`${username}:${password}`)}`; sessionStorage.setItem("bungaice_admin_auth", auth); load(); });
+      $("reload").addEventListener("click", load);
+      load();
+    </script>
+  </body>
+</html>
+<style>
+  body { background:#f7f8f4; color:#1c291e; font-family:system-ui,sans-serif; }
+  .admin-shell { max-width:980px; margin:auto; padding:28px 18px 64px; }
+  .admin-header { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; margin-bottom:28px; }
+  .eyebrow { color:#2e7d32; font-weight:800; font-size:12px; letter-spacing:1.5px; margin:0 0 8px; }
+  h1 { margin:0; font-size:clamp(2rem,5vw,3.2rem); letter-spacing:-.05em; } h2 { margin:.25rem 0 0; }
+  .muted { color:#6e786e; } .panel,.product-editor { background:#fff; border:1px solid #dfe7da; border-radius:18px; padding:22px; box-shadow:0 12px 30px #1630140d; }
+  .product-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+  .product-editor { display:flex; flex-direction:column; gap:14px; } .editor-top { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; border-bottom:1px solid #edf1ea; padding-bottom:14px; }
+  label { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; } input,textarea { border:1px solid #ccd8c7; border-radius:10px; padding:11px; font:inherit; font-weight:400; background:#fbfcfa; } textarea { resize:vertical; }
+  .switch-row { display:flex; gap:16px; flex-wrap:wrap; } .switch-row label { flex-direction:row; align-items:center; font-weight:600; } .switch-row input { accent-color:#2e7d32; }
+  .primary,.secondary { border:0; border-radius:10px; padding:11px 15px; font-weight:800; cursor:pointer; } .primary { background:#2e7d32; color:white; } .secondary { background:white; color:#2e7d32; border:1px solid #b9cfb5; }
+  .editor-actions { display:flex; align-items:center; gap:12px; } .editor-actions .muted { font-size:13px; } .pill { display:inline-block; background:#e6f2e2; color:#2e7d32; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:800; } .price-preview { color:#2e7d32; font-size:1.2rem; font-weight:900; }
+  .status { margin:0 0 18px; border-radius:10px; padding:12px 14px; } .success { background:#e8f5e9; color:#1b5e20; } .error { background:#ffebee; color:#b71c1c; }
+</style>

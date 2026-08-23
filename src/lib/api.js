@@ -1,16 +1,16 @@
 // src/lib/api.js
 export async function getStoreData() {
-  const GAS_URL = import.meta.env.PUBLIC_GAS_URL;
+  const catalogUrl = import.meta.env.PUBLIC_CATALOG_URL || import.meta.env.PUBLIC_GAS_URL;
 
-  if (!GAS_URL) {
+  if (!catalogUrl) {
     throw new Error(
-      "PUBLIC_GAS_URL belum di-set. Tambahin di .env atau environment variable Cloudflare Pages."
+      "PUBLIC_CATALOG_URL atau PUBLIC_GAS_URL belum di-set di environment variable Cloudflare Pages."
     );
   }
 
-  const res = await fetch(GAS_URL);
+  const res = await fetch(catalogUrl);
   if (!res.ok) {
-    throw new Error(`Gagal fetch data dari GAS: ${res.status} ${res.statusText}`);
+    throw new Error(`Gagal fetch katalog: ${res.status} ${res.statusText}`);
   }
 
   const data = await res.json();
@@ -18,6 +18,7 @@ export async function getStoreData() {
 }
 
 export function groupVarianByProduk(varianList) {
+  if (!Array.isArray(varianList)) return varianList || {};
   const grouped = {};
   for (const v of varianList) {
     if (!v.aktif) continue;
